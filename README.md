@@ -1,9 +1,9 @@
 # 瀑布流新闻网站
 ---
-## 预览地址：http://jsbin.com/ruguwuvomo/edit?html,output
+### 预览地址：http://jsbin.com/ruguwuvomo/edit?html,output
 # 懒加载原理
 ---
-懒加载预览： https://ouyangbeibei.github.io/project/layout.md/lazyLoad.md/lazyLoad.html
+### 懒加载预览： https://ouyangbeibei.github.io/project/layout.md/lazyLoad.md/lazyLoad.html
 > 原理：先将img标签中的src链接设为同一张图片（空白图片），将其真正的图片地址存储再img标签的自定义属性中（比如data-src）。当js监听到该图片元素进入可视窗口时，即将自定义属性中的地址存储到src属性中，达到懒加载的效果。这样做能防止页面一次性向服务器响应大量请求导致服务器响应慢，页面卡顿或崩溃等问题。
 
 ## 方法： 
@@ -13,6 +13,8 @@
 放置图片位置： layout() 将改变完大小的图片放置到页面上，append到对应的DOM元素节点上。具体关系对应前面的父子关系即可
 # 实现原理:
 ---
-## 整体思路: 1.获取数据 2.将数据变为DOM结构,以瀑布流的方式部署到页面上 3.当页面滚动至底部再次获取数据循环
+### 整体思路:
+
+### 1.获取数据 2.将数据变为DOM结构,以瀑布流的方式部署到页面上 3.当页面滚动至底部再次获取数据循环
 
 
