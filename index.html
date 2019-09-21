@@ -1,1 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/core.js"></script>
+    <title>waterfull-lazyload</title>
+    <style>
+            *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+    }
+    ul,li{
+             list-style: none;
+    }
+    .clearfix:after{
+            content: '';
+            display: block;
+            clear: both;
+    }
+        .wrap{
+            width: 90px;
+            margin: 0 auto;
+        }
+        #pic-ct{
+		position: relative;
+	}
+	#pic-ct .item{
+		position: absolute;
+		padding: 0 0 10px 0;
+		width: 280px;
+		margin: 10px;
+		border: 1px solid #DFDFDF;
+		background: #FFF;
+		opacity: 0;
+		transition: all .8s;
+	}
+	#pic-ct .item img{
+	    margin: 10px;
+	    width: 260px;
+	}
+	#pic-ct .item .header{
+    margin: 0 12px;
+	}
+	#pic-ct .desp{
+		font-size: 12px;
+		line-height: 1.8;
+	  margin: 10px 15px 0;
+	  color: #777371;
+	}
+	#load{
+		visibility: hidden;
+		height: 20px;
+	}
+	.hide{
+		display: none;
+	}
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="ct-waterfall">
+            <ul id="pic-ct" class="clearfix">
+                <!--<li class="item">
+    			<a href="#" class="link">
+    				<img src="http://s.img.mix.sina.com.cn/auto/resize?img=http%3A%2F%2Fwww.sinaimg.cn%2Fdy%2Fslidenews%2F5_img%2F2016_09%2F453_75615_657883.jpg&size=250_0" alt="">
+    			</a>
+    			<h4 class="header">标题</h4>
+    			<p class="desp">
+    				当地时间2016年3月1日，在东部与亲俄武装作战中受伤的乌克兰士兵接受海豚治疗。
+    			</p>
+    		</li>-->
 
+				<!-- 用于计算 item 宽度和列数，但不展示出来-->
+                <li class="item hide"></li>
+            </ul>
+            <div id="load">待机状态</div>
+        </div>
+    </div>
+    <script>
+        //1. 获取数据
+        //2. 把数据变为 Dom，通过瀑布流的方式放到页面上
+        //3. 当滚动到底部的时候， --》
+
+        var curPage = 1//第一次获得数据
+        var perPageCount = 1//每次获取10个数据
+
+        var colsumHeight = []//瀑布流 定义空数组，存放每一列的总高度
+        var nodeWidth = $('item').outerWidth(true)
+        var colNum = parseInt($('#pic-ct').width()/nodeWidth)//计算得到一排放置item的个数,即列数
+        console.log(colNum)
+        for(i = 0; i < colNum; i++){
+            colsumHeight[i] = 0//数组个数为colsumHeight,初始化每个元素为0
+        }
+
+        var isDataArrive = true
+
+        start()////保证页面初加载
+
+        function start(){
+            //思路实现:获取数据,变成DOM结构,瀑布流方式部署到页面
+            getData(function(newslist){
+                console.log(newslist)
+                isDataArrive = true
+                $(newslist).each(function(idx,news){
+                    var $node = getNode(news)
+                   $node.find('img').load(function(){ //预加载图片后,将其以瀑布流方式部署在页面上
+                       $('pic-ct').append($node)
+                       waterfallPlace($node)
+                   })
+                })
+            })
+            isDataArrive = false
+        }
+
+        $(window).scroll(function(){//当数据没有到来时候重新执行，页面滚动至底部#load位置,重新加载数据
+            if(!isDataArrive)return
+            if(isVisible($('#load'))){
+                start()
+            }
+        })
+
+        //获取数据
+
+        function getData(callback){
+            $.ajax({
+                url: 'https://photo.sina.cn/aj/v2/index?cate=military',
+                dataType: 'jsonp',   
+                jsonp:"callback",
+                data: {
+                    pagesize: perPageCount,
+                    page: curPage
+                }
+		    }).done(function(ret){
+			if(ret && ret.code == 1 ){
+				callback(ret.data);   //如果数据没问题，那么生成节点并摆放好位置
+				curPage++
+			}else{
+				console.log('get error data')
+			}
+		})
+    }
+
+     //将数据变为DOM结构
+     function getNode(item){
+        var tpl = ''
+            tpl += '<li class="item">'
+            tpl += ' <a href="'+ item.url +'" class="link"><img src="' + item.thumb + '" alt=""></a>'
+            tpl += ' <h4 class="header">'+ item.stitle +'</h4>'
+            tpl += '<p class="desp">' + item.title +'</p>'
+            
+            tpl += '</li>'
+        
+	return $(tpl)
+  } 
+
+
+    //瀑布流布局
+    function waterfallPlace($node){
+        var idx = 0,
+        minSumHeight = colsumHeight[0]
+        for(var i=0;i<colSumHeight.length; i++){
+			if(colSumHeight[i] < minSumHeight){
+				idx = i
+				minSumHeight = colSumHeight[i]
+			}
+		}
+        console.log(colSumHeight)
+		console.log('waterFallPlace')
+		console.log(nodeWidth, idx)
+        $node.css({
+			left: nodeWidth*idx,
+			top: minSumHeight,
+			opacity: 1
+		})
+        colSumHeight[idx] = $node.outerHeight(true) + colSumHeight[idx]
+		console.log(colSumHeight)
+		$('#pic-ct').height(Math.max.apply(null,colSumHeight))
+    }
+
+    function isVisible($el){//图片懒加载
+        var scrollH = $(window).scrollTop(),//滚动距离
+        winH = $(window).height(),//窗口高度
+        top = $el.offset().top//页面顶部至目标的高度
+        if(top < winH + scrollH){
+  	  	return true;
+  	  }else{
+  	  	return false;
+  	  }
+
+
+    }
+
+
+    </script>
+</body>
+</html>
